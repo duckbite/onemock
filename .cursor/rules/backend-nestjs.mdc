@@ -1,0 +1,231 @@
+---
+description: guidelines for back-end using nestjs
+alwaysApply: false
+---
+
+# NestJS Backend Development Rules
+
+## Core Principles
+
+- **TypeScript First**: Always use strict TypeScript configuration with proper typing
+- **Dependency Injection**: Leverage NestJS DI container for all services and controllers
+- **Decorator Pattern**: Use NestJS decorators consistently for metadata and configuration
+- **Module Organization**: Follow NestJS module structure and separation of concerns
+
+## File Structure & Organization
+
+```
+src/
+├── modules/           # Feature modules (users, lessons, avatars, etc.)
+│   ├── users/
+│   │   ├── dto/      # Data Transfer Objects
+│   │   ├── entities/ # Database entities/models
+│   │   ├── users.controller.ts
+│   │   ├── users.service.ts
+│   │   ├── users.module.ts
+│   │   └── users.resolver.ts  # GraphQL resolver
+├── common/            # Shared utilities, guards, interceptors
+├── config/            # Configuration files
+├── database/          # Database connection and migrations
+└── main.ts           # Application entry point
+```
+
+## Naming Conventions
+
+- **Files**: kebab-case (e.g., `user-profile.service.ts`)
+- **Classes**: PascalCase (e.g., `UserProfileService`)
+- **Methods**: camelCase (e.g., `getUserProfile`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_LOGIN_ATTEMPTS`)
+- **Interfaces**: PascalCase with 'I' prefix for internal interfaces (e.g., `IUserRepository`)
+
+## Service Layer Rules
+
+- **Single Responsibility**: Each service should have one clear purpose
+- **Dependency Injection**: Inject dependencies through constructor, never use `new`
+- **Async Operations**: Always use async/await, avoid callbacks
+- **Error Handling**: Use custom exception filters and proper HTTP status codes
+
+```typescript
+@Injectable()
+export class UserService {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly logger: Logger,
+    private readonly configService: ConfigService
+  ) {}
+
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      const user = await this.userRepository.create(createUserDto);
+      this.logger.log(`User created: ${user.id}`);
+      return user;
+    } catch (error) {
+      this.logger.error(`Failed to create user: ${error.message}`);
+      throw new InternalServerErrorException('Failed to create user');
+    }
+  }
+}
+```
+
+## Controller Rules
+
+- **Validation**: Always use DTOs with class-validator decorators
+- **Response Types**: Define explicit return types for all endpoints
+- **Error Handling**: Use proper HTTP status codes and exception filters
+- **Documentation**: Include OpenAPI/Swagger decorators for API documentation
+
+```typescript
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+@ApiTags('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  @HttpCode(201)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    return this.usersService.createUser(createUserDto);
+  }
+}
+```
+
+## DTO & Validation Rules
+
+- **Input Validation**: Use class-validator decorators for all input validation
+- **Type Safety**: Create separate DTOs for create, update, and response operations
+- **Transformation**: Use class-transformer for data transformation
+- **Nested Objects**: Validate nested objects with proper DTOs
+
+```typescript
+export class CreateUserDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+  password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  lastName: string;
+}
+```
+
+## Database & Entity Rules
+
+- **TypeORM**: Use TypeORM decorators consistently
+- **Relationships**: Define clear entity relationships with proper cascade options
+- **Indexing**: Add database indexes for frequently queried fields
+- **Soft Deletes**: Implement soft deletes for user data when appropriate
+
+```typescript
+@Entity('users')
+@Index(['email'], { unique: true })
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  passwordHash: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
+}
+```
+
+## Configuration & Environment
+
+- **Environment Variables**: Use ConfigService for all configuration
+- **Validation**: Validate environment variables at startup
+- **Secrets**: Store sensitive data in AWS Secrets Manager
+- **Environment Files**: Use .env files for local development only
+- **Node.js Version**: Use Node.js 22 (latest AWS Lambda supported version)
+- **Package Manager**: Use pnpm for dependency management and faster installations
+
+```typescript
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string().valid('development', 'production', 'test'),
+        PORT: Joi.number().default(3000),
+        DATABASE_URL: Joi.string().required(),
+      }),
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+## Logging & Monitoring
+
+- **Structured Logging**: Use Winston or Pino with structured log format
+- **Log Levels**: Use appropriate log levels (error, warn, info, debug)
+- **Context**: Include request context in logs (user ID, request ID, etc.)
+- **Performance**: Log execution time for critical operations
+
+```typescript
+@Injectable()
+export class LoggerService {
+  private logger = new Logger(LoggerService.name);
+
+  logUserAction(userId: string, action: string, metadata?: any) {
+    this.logger.log({
+      message: `User action: ${action}`,
+      userId,
+      action,
+      metadata,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+```
+
+## Security Rules
+
+- **Authentication**: Use JWT tokens with proper expiration
+- **Authorization**: Implement role-based access control (RBAC)
+- **Input Sanitization**: Validate and sanitize all user inputs
+- **Rate Limiting**: Implement rate limiting for public endpoints
+- **CORS**: Configure CORS properly for production
+
+```typescript
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
+@Controller('admin')
+export class AdminController {
+  // Admin-only endpoints
+}
+```
+
+## Performance Rules
+
+- **Database Queries**: Use query optimization and proper indexing
+- **Caching**: Implement Redis caching for frequently accessed data
+- **Async Operations**: Use Promise.all for parallel operations when possible
+- **Memory Management**: Avoid memory leaks in long-running processes
+- **Connection Pooling**: Configure proper database connection pooling
+  description:
+  globs:
+  alwaysApply: false
+
+---

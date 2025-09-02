@@ -1,0 +1,1354 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Stripe API",
+    "version": "2020-08-27",
+    "description": "The Stripe REST API for payment processing"
+  },
+  "servers": [
+    {
+      "url": "https://api.stripe.com/v1",
+      "description": "Stripe API server"
+    }
+  ],
+  "paths": {
+    "/charges": {
+      "get": {
+        "summary": "List all charges",
+        "description": "Returns a list of charges you've previously created",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "A limit on the number of objects to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "description": "A cursor for use in pagination",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a charge",
+        "description": "To charge a credit or a debit card, you create a Charge object",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Charge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{id}": {
+      "get": {
+        "summary": "Retrieve a charge",
+        "description": "Retrieves the details of a charge that has previously been created",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^ch_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Charge"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update a charge",
+        "description": "Updates the specified charge by setting the values of the parameters passed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^ch_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Charge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "summary": "List all customers",
+        "description": "Returns a list of your customers",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "A limit on the number of objects to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a customer",
+        "description": "Creates a new customer object",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "summary": "Retrieve a customer",
+        "description": "Retrieves the details of an existing customer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^cus_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update a customer",
+        "description": "Updates the specified customer by setting the values of the parameters passed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^cus_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a customer",
+        "description": "Permanently deletes a customer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^cus_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedCustomer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "List all products",
+        "description": "Returns a list of your products",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "A limit on the number of objects to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a product",
+        "description": "Creates a new product object",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Retrieve a product",
+        "description": "Retrieves the details of an existing product",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^prod_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update a product",
+        "description": "Updates the specified product by setting the values of the parameters passed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^prod_[a-zA-Z0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Charge": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^ch_[a-zA-Z0-9]+$",
+            "description": "Unique identifier for the object"
+          },
+          "object": {
+            "type": "string",
+            "enum": ["charge"],
+            "description": "String representing the object's type"
+          },
+          "amount": {
+            "type": "integer",
+            "description": "Amount intended to be collected by this payment"
+          },
+          "amount_captured": {
+            "type": "integer",
+            "description": "Amount in cents captured (can be less than the amount attribute on the charge)"
+          },
+          "amount_refunded": {
+            "type": "integer",
+            "description": "Amount in cents refunded (can be less than the amount attribute on the charge)"
+          },
+          "application": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the Connect application that created the charge"
+          },
+          "application_fee": {
+            "type": "integer",
+            "nullable": true,
+            "description": "The application fee (if any) for the charge"
+          },
+          "application_fee_amount": {
+            "type": "integer",
+            "nullable": true,
+            "description": "The amount of the application fee (if any) for the charge"
+          },
+          "balance_transaction": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the balance transaction that describes the impact of this charge on your account balance"
+          },
+          "billing_details": {
+            "$ref": "#/components/schemas/BillingDetails"
+          },
+          "calculated_statement_descriptor": {
+            "type": "string",
+            "nullable": true,
+            "description": "The full statement descriptor that is passed to card networks"
+          },
+          "captured": {
+            "type": "boolean",
+            "description": "If the charge was created without capturing, this boolean represents whether it is still uncaptured or has since been captured"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Time at which the object was created"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Three-letter ISO currency code"
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the customer this charge is for if one exists"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "An arbitrary string attached to the object"
+          },
+          "disputed": {
+            "type": "boolean",
+            "description": "Whether the charge has been disputed"
+          },
+          "failure_code": {
+            "type": "string",
+            "nullable": true,
+            "description": "Error code explaining reason for charge failure if available"
+          },
+          "failure_message": {
+            "type": "string",
+            "nullable": true,
+            "description": "Message to user further explaining reason for charge failure if available"
+          },
+          "fraud_details": {
+            "type": "object",
+            "description": "Information on fraud assessments for the charge"
+          },
+          "invoice": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the invoice this charge is for if one exists"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "Has the value true if the object exists in live mode or the value false if the object exists in test mode"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "on_behalf_of": {
+            "type": "string",
+            "nullable": true,
+            "description": "The account (if any) the charge was made on behalf of"
+          },
+          "order": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the order this charge is for if one exists"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ChargeOutcome"
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "true if the charge succeeded, or was successfully authorized for later capture"
+          },
+          "payment_intent": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the PaymentIntent associated with this charge"
+          },
+          "payment_method": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the payment method used in this charge"
+          },
+          "payment_method_details": {
+            "$ref": "#/components/schemas/PaymentMethodDetails"
+          },
+          "receipt_email": {
+            "type": "string",
+            "nullable": true,
+            "description": "This is the email address that the receipt for this charge was sent to"
+          },
+          "receipt_number": {
+            "type": "string",
+            "nullable": true,
+            "description": "This is the transaction number that appears on email receipts sent for this charge"
+          },
+          "receipt_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "This is the URL to view the receipt for this charge"
+          },
+          "refunded": {
+            "type": "boolean",
+            "description": "Whether or not the charge has been fully refunded"
+          },
+          "refunds": {
+            "$ref": "#/components/schemas/RefundList"
+          },
+          "review": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the review associated with this charge if one exists"
+          },
+          "shipping": {
+            "$ref": "#/components/schemas/ShippingDetails"
+          },
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "description": "For most Stripe users, the source of every charge is a credit or debit card"
+          },
+          "source_transfer": {
+            "type": "string",
+            "nullable": true,
+            "description": "The transfer ID which created this charge"
+          },
+          "statement_descriptor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Extra information about a charge"
+          },
+          "statement_descriptor_suffix": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provides information about the charge that customers see on their statements"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["succeeded", "pending", "failed"],
+            "description": "The status of the payment"
+          },
+          "transfer_data": {
+            "type": "object",
+            "nullable": true,
+            "description": "An optional dictionary including the account to automatically transfer to as part of a destination charge"
+          },
+          "transfer_group": {
+            "type": "string",
+            "nullable": true,
+            "description": "A string that identifies this transaction as part of a group"
+          }
+        },
+        "required": ["id", "object", "amount", "amount_captured", "amount_refunded", "captured", "created", "currency", "disputed", "livemode", "paid", "refunded", "status"]
+      },
+      "ChargeList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["list"],
+            "description": "String representing the object's type"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Charge"
+            },
+            "description": "An array containing the actual charges"
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether there are more elements available after this set"
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "The total number of objects in the list"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL where this list can be accessed"
+          }
+        },
+        "required": ["object", "data", "has_more", "url"]
+      },
+      "ChargeCreateRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "description": "A positive integer representing how much to charge in the smallest currency unit"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Three-letter ISO currency code"
+          },
+          "customer": {
+            "type": "string",
+            "description": "ID of an existing customer"
+          },
+          "description": {
+            "type": "string",
+            "description": "An arbitrary string which you can attach to a charge object"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "source": {
+            "type": "string",
+            "description": "A payment source to be charged"
+          }
+        },
+        "required": ["amount", "currency"]
+      },
+      "ChargeUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "An arbitrary string which you can attach to a charge object"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cus_[a-zA-Z0-9]+$",
+            "description": "Unique identifier for the object"
+          },
+          "object": {
+            "type": "string",
+            "enum": ["customer"],
+            "description": "String representing the object's type"
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "balance": {
+            "type": "integer",
+            "description": "Current balance, if any, being stored on the customer"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Time at which the object was created"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true,
+            "description": "Three-letter ISO code for the currency the customer can be charged in for recurring billing purposes"
+          },
+          "default_source": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the default payment source for the customer"
+          },
+          "delinquent": {
+            "type": "boolean",
+            "description": "When the customer's latest invoice is billed by charging automatically, delinquent is true if the invoice's latest charge is failed"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "An arbitrary string attached to the object"
+          },
+          "discount": {
+            "type": "object",
+            "nullable": true,
+            "description": "Describes the current discount active on the customer, if there is one"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer's email address"
+          },
+          "invoice_prefix": {
+            "type": "string",
+            "nullable": true,
+            "description": "The prefix for the customer used to generate unique invoice numbers from this customer"
+          },
+          "invoice_settings": {
+            "$ref": "#/components/schemas/InvoiceSettings"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "Has the value true if the object exists in live mode or the value false if the object exists in test mode"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "The customer's full name or business name"
+          },
+          "next_invoice_sequence": {
+            "type": "integer",
+            "description": "The suffix of the customer's next invoice number"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "description": "The customer's phone number"
+          },
+          "preferred_locales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The customer's preferred locales"
+          },
+          "shipping": {
+            "$ref": "#/components/schemas/ShippingDetails"
+          },
+          "tax_exempt": {
+            "type": "string",
+            "enum": ["none", "exempt", "reverse"],
+            "description": "Describes the customer's tax exemption status"
+          }
+        },
+        "required": ["id", "object", "balance", "created", "delinquent", "livemode", "next_invoice_sequence", "tax_exempt"]
+      },
+      "CustomerList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["list"],
+            "description": "String representing the object's type"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Customer"
+            },
+            "description": "An array containing the actual customers"
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether there are more elements available after this set"
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "The total number of objects in the list"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL where this list can be accessed"
+          }
+        },
+        "required": ["object", "data", "has_more", "url"]
+      },
+      "CustomerCreateRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer's email address"
+          },
+          "name": {
+            "type": "string",
+            "description": "The customer's full name or business name"
+          },
+          "description": {
+            "type": "string",
+            "description": "An arbitrary string attached to the object"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "phone": {
+            "type": "string",
+            "description": "The customer's phone number"
+          }
+        }
+      },
+      "CustomerUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer's email address"
+          },
+          "name": {
+            "type": "string",
+            "description": "The customer's full name or business name"
+          },
+          "description": {
+            "type": "string",
+            "description": "An arbitrary string attached to the object"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "phone": {
+            "type": "string",
+            "description": "The customer's phone number"
+          }
+        }
+      },
+      "DeletedCustomer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cus_[a-zA-Z0-9]+$",
+            "description": "Unique identifier for the object"
+          },
+          "object": {
+            "type": "string",
+            "enum": ["customer"],
+            "description": "String representing the object's type"
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Always true for a deleted object"
+          }
+        },
+        "required": ["id", "object", "deleted"]
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^prod_[a-zA-Z0-9]+$",
+            "description": "Unique identifier for the object"
+          },
+          "object": {
+            "type": "string",
+            "enum": ["product"],
+            "description": "String representing the object's type"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the product is currently available for purchase"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of up to 5 attributes that each SKU can provide values for"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Time at which the object was created"
+          },
+          "default_price": {
+            "type": "string",
+            "nullable": true,
+            "description": "The ID of the default price for this product"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "The product's description"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of up to 8 URLs of images for this product"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "Has the value true if the object exists in live mode or the value false if the object exists in test mode"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "name": {
+            "type": "string",
+            "description": "The product's name"
+          },
+          "package_dimensions": {
+            "type": "object",
+            "nullable": true,
+            "description": "The dimensions of this product for shipping purposes"
+          },
+          "shippable": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether this product is shipped"
+          },
+          "statement_descriptor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Extra information about a product which will appear on your customer's credit card statement"
+          },
+          "tax_code": {
+            "type": "string",
+            "nullable": true,
+            "description": "A tax code ID"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["service", "good"],
+            "description": "The type of the product"
+          },
+          "unit_label": {
+            "type": "string",
+            "nullable": true,
+            "description": "A label that represents units of this product"
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Time at which the object was last updated"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "description": "A URL of a publicly-accessible webpage for this product"
+          }
+        },
+        "required": ["id", "object", "active", "attributes", "created", "images", "livemode", "name", "type", "updated"]
+      },
+      "ProductList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["list"],
+            "description": "String representing the object's type"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            },
+            "description": "An array containing the actual products"
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether there are more elements available after this set"
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "The total number of objects in the list"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL where this list can be accessed"
+          }
+        },
+        "required": ["object", "data", "has_more", "url"]
+      },
+      "ProductCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The product's name"
+          },
+          "description": {
+            "type": "string",
+            "description": "The product's description"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["service", "good"],
+            "description": "The type of the product"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of up to 8 URLs of images for this product"
+          }
+        },
+        "required": ["name"]
+      },
+      "ProductUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The product's name"
+          },
+          "description": {
+            "type": "string",
+            "description": "The product's description"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Set of key-value pairs that you can attach to an object"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of up to 8 URLs of images for this product"
+          }
+        }
+      },
+      "BillingDetails": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Email address"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full name"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Billing phone number"
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "description": "City, district, suburb, town, or village"
+          },
+          "country": {
+            "type": "string",
+            "nullable": true,
+            "description": "Two-letter country code"
+          },
+          "line1": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address line 1"
+          },
+          "line2": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address line 2"
+          },
+          "postal_code": {
+            "type": "string",
+            "nullable": true,
+            "description": "ZIP or postal code"
+          },
+          "state": {
+            "type": "string",
+            "nullable": true,
+            "description": "State, county, province, or region"
+          }
+        }
+      },
+      "ChargeOutcome": {
+        "type": "object",
+        "properties": {
+          "network_status": {
+            "type": "string",
+            "enum": ["approved_by_network", "declined_by_network", "not_sent_to_network", "reversed_after_approval"],
+            "description": "Possible values are approved_by_network, declined_by_network, not_sent_to_network, and reversed_after_approval"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "An enumerated value providing a more detailed explanation of the outcome"
+          },
+          "risk_level": {
+            "type": "string",
+            "enum": ["normal", "elevated", "highest"],
+            "description": "Stripe's evaluation of the riskiness of the payment"
+          },
+          "risk_score": {
+            "type": "integer",
+            "description": "Stripe's evaluation of the riskiness of the payment"
+          },
+          "seller_message": {
+            "type": "string",
+            "nullable": true,
+            "description": "A human-readable description of the outcome type and reason"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["authorized", "manual_review", "issuer_declined", "blocked", "invalid"],
+            "description": "Type of outcome"
+          }
+        }
+      },
+      "PaymentMethodDetails": {
+        "type": "object",
+        "properties": {
+          "card": {
+            "type": "object",
+            "properties": {
+              "brand": {
+                "type": "string",
+                "enum": ["amex", "diners", "discover", "jcb", "mastercard", "unionpay", "visa", "unknown"],
+                "description": "Card brand"
+              },
+              "checks": {
+                "type": "object",
+                "properties": {
+                  "address_line1_check": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "If a address line1 was provided, results of the check"
+                  },
+                  "address_postal_code_check": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "If a address postal code was provided, results of the check"
+                  },
+                  "cvc_check": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "If a CVC was provided, results of the check"
+                  }
+                }
+              },
+              "country": {
+                "type": "string",
+                "description": "Two-letter ISO code representing the country of the card"
+              },
+              "exp_month": {
+                "type": "integer",
+                "description": "Two-digit number representing the card's expiration month"
+              },
+              "exp_year": {
+                "type": "integer",
+                "description": "Four-digit number representing the card's expiration year"
+              },
+              "fingerprint": {
+                "type": "string",
+                "description": "Uniquely identifies this particular card number"
+              },
+              "funding": {
+                "type": "string",
+                "enum": ["credit", "debit", "prepaid", "unknown"],
+                "description": "Card funding type"
+              },
+              "installments": {
+                "type": "object",
+                "nullable": true,
+                "description": "Installment details for this payment"
+              },
+              "last4": {
+                "type": "string",
+                "description": "The last four digits of the card"
+              },
+              "mandate": {
+                "type": "string",
+                "nullable": true,
+                "description": "ID of a card PaymentMethod from a customer"
+              },
+              "network": {
+                "type": "string",
+                "enum": ["amex", "cartes_bancaires", "diners", "discover", "interac", "jcb", "mastercard", "unionpay", "visa", "unknown"],
+                "description": "Card network"
+              },
+              "three_d_secure": {
+                "type": "object",
+                "nullable": true,
+                "description": "3D Secure details for this payment"
+              },
+              "wallet": {
+                "type": "object",
+                "nullable": true,
+                "description": "If this card is part of a card wallet, this contains the details of the card wallet"
+              }
+            }
+          },
+          "type": {
+            "type": "string",
+            "enum": ["card", "alipay", "ideal", "sepa_debit", "sofort", "bancontact"],
+            "description": "The type of the payment method"
+          }
+        }
+      },
+      "RefundList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["list"],
+            "description": "String representing the object's type"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "An array containing the actual refunds"
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether there are more elements available after this set"
+          },
+          "total_count": {
+            "type": "integer",
+            "description": "The total number of objects in the list"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL where this list can be accessed"
+          }
+        },
+        "required": ["object", "data", "has_more", "url"]
+      },
+      "ShippingDetails": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "carrier": {
+            "type": "string",
+            "nullable": true,
+            "description": "The delivery service that shipped a physical product"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Recipient name"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Recipient phone number"
+          },
+          "tracking_number": {
+            "type": "string",
+            "nullable": true,
+            "description": "The tracking number for a physical product"
+          }
+        }
+      },
+      "InvoiceSettings": {
+        "type": "object",
+        "properties": {
+          "custom_fields": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "nullable": true,
+            "description": "Default custom fields to be displayed on invoices for this customer"
+          },
+          "default_payment_method": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of a payment method that's attached to the customer"
+          },
+          "footer": {
+            "type": "string",
+            "nullable": true,
+            "description": "Default footer to be displayed on invoices for this customer"
+          }
+        }
+      }
+    }
+  }
+}

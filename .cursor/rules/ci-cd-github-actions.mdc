@@ -1,0 +1,427 @@
+---
+description: guidelines for setting up ci-cd using github actions
+alwaysApply: false
+---
+
+# GitHub Actions CI/CD Rules
+
+## Core Principles
+
+- **Automated Quality Gates**: Implement automated testing, linting, and security scanning
+- **Environment Promotion**: Use staging environment for validation before production
+- **Infrastructure as Code**: Deploy infrastructure changes through CI/CD pipeline
+- **Security First**: Implement secrets management and security scanning
+
+## Workflow Structure
+
+```
+.github/
+├── workflows/
+│   ├── ci.yml              # Continuous Integration
+│   ├── cd-staging.yml      # Staging Deployment
+│   ├── cd-production.yml   # Production Deployment
+│   ├── security.yml        # Security Scanning
+│   └── dependency.yml      # Dependency Updates
+├── actions/                 # Custom GitHub Actions
+└── templates/              # Workflow templates
+```
+
+## CI Workflow Rules
+
+- **Trigger on PR**: Run CI on all pull requests and pushes to main branch
+- **Matrix Testing**: Test against multiple Node.js versions and environments
+- **Caching**: Cache dependencies and build artifacts for faster builds
+- **Parallel Jobs**: Run independent jobs in parallel when possible
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '22'
+  NESTJS_VERSION: '10'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+          strategy:
+        matrix:
+          node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+            - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linting
+        run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm run test:ci
+
+      - name: Run type checking
+        run: pnpm run type-check
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+```
+
+## Testing Rules
+
+- **Unit Tests**: Run unit tests with coverage reporting
+- **Integration Tests**: Test against real AWS services in staging
+- **E2E Tests**: Run end-to-end tests for critical user flows
+- **Performance Tests**: Monitor test execution time and performance
+
+```yaml
+- name: Run unit tests
+  run: pnpm run test:unit
+
+- name: Run integration tests
+  run: pnpm run test:integration
+  env:
+    AWS_REGION: us-east-1
+    STAGE: test
+
+- name: Run E2E tests
+  run: pnpm run test:e2e
+  env:
+    GRAPHQL_ENDPOINT: ${{ secrets.TEST_GRAPHQL_ENDPOINT }}
+
+- name: Performance test
+  run: pnpm run test:performance
+  env:
+    PERFORMANCE_THRESHOLD: 2000
+```
+
+## Code Quality Rules
+
+- **Linting**: Use ESLint with TypeScript and NestJS rules
+- **Formatting**: Use Prettier for consistent code formatting
+- **Type Checking**: Run TypeScript compiler checks
+- **Security Scanning**: Use CodeQL and other security tools
+
+```yaml
+      - name: Lint code
+        run: pnpm run lint
+
+      - name: Check code formatting
+        run: pnpm run format:check
+
+      - name: Type check
+        run: pnpm run type-check
+
+- name: Security scan
+  uses: github/codeql-action/init@v2
+  with:
+    languages: javascript
+
+- name: Perform CodeQL Analysis
+  uses: github/codeql-action/analyze@v2
+
+- name: Run Snyk security scan
+  uses: snyk/actions/node@master
+  env:
+    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  with:
+    args: --severity-threshold=high
+```
+
+## Staging Deployment Rules
+
+- **Auto-deploy**: Deploy to staging on merge to develop branch
+- **Environment Validation**: Run smoke tests after deployment
+- **Rollback Plan**: Implement automatic rollback on deployment failures
+- **Infrastructure Updates**: Deploy infrastructure changes through CI/CD
+
+```yaml
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+env:
+  STAGE: staging
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+            - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm run test:ci
+
+      - name: Build application
+        run: pnpm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to staging
+        run: |
+          npm run deploy:staging
+          echo "Deployment completed successfully"
+
+      - name: Run smoke tests
+        run: npm run test:smoke:staging
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+## Production Deployment Rules
+
+- **Manual Approval**: Require manual approval for production deployments
+- **Staging Validation**: Ensure staging deployment is successful before production
+- **Blue-Green Deployment**: Implement zero-downtime deployment strategy
+- **Monitoring**: Monitor deployment health and performance
+
+```yaml
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ['Deploy to Staging']
+    types: [completed]
+    branches: [develop]
+
+env:
+  STAGE: production
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+            - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm run build:production
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to production
+        run: |
+          npm run deploy:production
+          echo "Production deployment completed successfully"
+
+      - name: Health check
+        run: npm run health:check:production
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+
+      - name: Run production tests
+        run: npm run test:production
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+
+      - name: Notify production deployment
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+## Security & Compliance Rules
+
+- **Secrets Management**: Use GitHub Secrets for sensitive data
+- **Dependency Scanning**: Regularly scan for vulnerable dependencies
+- **Container Security**: Scan container images for vulnerabilities
+- **Compliance Checks**: Implement compliance and policy checks
+
+```yaml
+- name: Check for secrets
+  uses: trufflesecurity/trufflehog@main
+  with:
+    path: .
+    base: ${{ github.event.before }}
+    head: ${{ github.sha }}
+
+      - name: Run dependency vulnerability scan
+        run: pnpm audit --audit-level=high
+
+- name: Check license compliance
+  run: npm run license:check
+
+- name: Run OWASP ZAP security scan
+  uses: zaproxy/action-full-scan@v0.8.0
+  with:
+    target: 'https://staging.dualinga.com'
+    rules_file_name: '.zap/rules.tsv'
+    cmd_options: '-a'
+```
+
+## Infrastructure Deployment Rules
+
+- **Serverless Framework**: Deploy infrastructure changes through CI/CD
+- **Environment Promotion**: Promote infrastructure changes across environments
+- **Rollback Strategy**: Implement infrastructure rollback capabilities
+- **Monitoring**: Monitor infrastructure deployment health
+
+```yaml
+- name: Deploy infrastructure
+  run: |
+    npm run deploy:infrastructure:${{ env.STAGE }}
+
+- name: Validate infrastructure
+  run: |
+    npm run validate:infrastructure:${{ env.STAGE }}
+
+- name: Run infrastructure tests
+  run: |
+    npm run test:infrastructure:${{ env.STAGE }}
+```
+
+## Performance & Monitoring Rules
+
+- **Performance Testing**: Run performance tests after deployment
+- **Load Testing**: Test system under load to ensure scalability
+- **Monitoring Setup**: Configure monitoring and alerting
+- **Metrics Collection**: Collect deployment and performance metrics
+
+```yaml
+- name: Performance test
+  run: npm run test:performance:${{ env.STAGE }}
+  env:
+    PERFORMANCE_THRESHOLD: 1000
+
+- name: Load test
+  run: npm run test:load:${{ env.STAGE }}
+  env:
+    LOAD_TEST_USERS: 100
+    LOAD_TEST_DURATION: 300
+
+- name: Setup monitoring
+  run: npm run setup:monitoring:${{ env.STAGE }}
+
+- name: Configure alerts
+  run: npm run configure:alerts:${{ env.STAGE }}
+```
+
+## Rollback & Recovery Rules
+
+- **Automatic Rollback**: Implement automatic rollback on deployment failures
+- **Health Checks**: Monitor application health during and after deployment
+- **Rollback Triggers**: Define clear criteria for rollback decisions
+- **Recovery Procedures**: Document and automate recovery procedures
+
+```yaml
+- name: Health check with retry
+  uses: nick-fields/retry@v2
+  with:
+    timeout_minutes: 10
+    max_attempts: 3
+    retry_on: error
+    command: npm run health:check:${{ env.STAGE }}
+
+- name: Rollback on failure
+  if: failure()
+  run: |
+    npm run rollback:${{ env.STAGE }}
+    echo "Rollback completed due to deployment failure"
+
+- name: Notify rollback
+  if: failure()
+  uses: 8398a7/action-slack@v3
+  with:
+    status: failure
+    channel: '#deployments'
+    webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+## Documentation & Reporting Rules
+
+- **Deployment Reports**: Generate comprehensive deployment reports
+- **Change Logs**: Maintain change logs for all deployments
+- **Performance Reports**: Document performance metrics and trends
+- **Incident Reports**: Document and analyze deployment incidents
+
+```yaml
+- name: Generate deployment report
+  run: npm run generate:report:${{ env.STAGE }}
+
+- name: Update changelog
+  run: npm run update:changelog
+
+- name: Create performance report
+  run: npm run create:performance:report:${{ env.STAGE }}
+
+- name: Archive deployment artifacts
+  uses: actions/upload-artifact@v3
+  with:
+    name: deployment-${{ env.STAGE }}-${{ github.run_number }}
+    path: |
+      reports/
+      logs/
+      artifacts/
+```
+
+description:
+globs:
+alwaysApply: false
+
+---
