@@ -200,3 +200,6 @@ Thumbs.db
 
 # Local development
 local/
+
+# Superpowers scratch state
+.superpowers/
