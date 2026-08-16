@@ -1,4 +1,4 @@
 export function createMock(spec: unknown): never {
-  void spec // Mark parameter as intentionally unused
+  void spec
   throw new Error('onemock: createMock is not implemented yet')
 }
