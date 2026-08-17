@@ -38,3 +38,22 @@ export function buildRouteTable(document: DocumentWithPaths): RouteTableEntry[] 
 
   return entries
 }
+
+export function matchPath(template: string, actualPath: string): Record<string, string> | null {
+  const templateSegments = template.split('/').filter((segment) => segment.length > 0)
+  const actualSegments = actualPath.split('/').filter((segment) => segment.length > 0)
+
+  if (templateSegments.length !== actualSegments.length) return null
+
+  const params: Record<string, string> = {}
+  for (let i = 0; i < templateSegments.length; i++) {
+    const templateSegment = templateSegments[i]
+    const actualSegment = actualSegments[i]
+    if (templateSegment.startsWith('{') && templateSegment.endsWith('}')) {
+      params[templateSegment.slice(1, -1)] = decodeURIComponent(actualSegment)
+    } else if (templateSegment !== actualSegment) {
+      return null
+    }
+  }
+  return params
+}

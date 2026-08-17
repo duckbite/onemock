@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { buildRouteTable } from './route-table'
+import { buildRouteTable, matchPath } from './route-table'
 import { loadSpec } from './spec-loader'
 
 describe('buildRouteTable', () => {
@@ -75,5 +75,34 @@ describe('buildRouteTable with a real loaded spec', () => {
       'get /pets/{petId}',
       'post /pets',
     ])
+  })
+})
+
+describe('matchPath', () => {
+  it('matches a static path with no params', () => {
+    expect(matchPath('/pets', '/pets')).toEqual({})
+  })
+
+  it('extracts a single path param', () => {
+    expect(matchPath('/pets/{petId}', '/pets/abc123')).toEqual({ petId: 'abc123' })
+  })
+
+  it('extracts multiple path params', () => {
+    expect(matchPath('/owners/{ownerId}/pets/{petId}', '/owners/o1/pets/p1')).toEqual({
+      ownerId: 'o1',
+      petId: 'p1',
+    })
+  })
+
+  it('returns null when segment counts differ', () => {
+    expect(matchPath('/pets/{petId}', '/pets')).toBeNull()
+  })
+
+  it('returns null when a static segment does not match', () => {
+    expect(matchPath('/pets/{petId}', '/owners/1')).toBeNull()
+  })
+
+  it('decodes URI-encoded param values', () => {
+    expect(matchPath('/pets/{petId}', '/pets/a%20b')).toEqual({ petId: 'a b' })
   })
 })
