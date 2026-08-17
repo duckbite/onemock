@@ -24,6 +24,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@readme/openapi-parser": "^7.0.1"
+  },
   "devDependencies": {
     "@types/node": "^22.9.0",
     "tsup": "^8.3.5",
