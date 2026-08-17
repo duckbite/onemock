@@ -45,3 +45,21 @@ describe('createMock', () => {
     ).rejects.toThrow(/^onemock: invalid spec:/)
   })
 })
+
+describe('createMock listen/close', () => {
+  it('serves requests over real HTTP once listen() resolves', async () => {
+    const mock = await createMock(petStoreSpec)
+    const { port } = await mock.listen(0)
+
+    const response = await fetch(`http://localhost:${port}/pets/1`)
+    expect(response.status).toBe(200)
+
+    await mock.close()
+  })
+
+  it('close() is a no-op when listen() was never called', async () => {
+    const mock = await createMock(petStoreSpec)
+
+    await expect(mock.close()).resolves.toBeUndefined()
+  })
+})
