@@ -35,6 +35,9 @@ importers:
       '@readme/openapi-parser':
         specifier: ^7.0.1
         version: 7.0.1(openapi-types@12.1.3)
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
     devDependencies:
       '@types/node':
         specifier: ^22.9.0
