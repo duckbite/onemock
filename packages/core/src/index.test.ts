@@ -63,3 +63,19 @@ describe('createMock listen/close', () => {
     await expect(mock.close()).resolves.toBeUndefined()
   })
 })
+
+describe('createMock intercept/close', () => {
+  it('intercepts requests to the spec base URL once intercept() resolves', async () => {
+    const specWithServer = {
+      ...petStoreSpec,
+      servers: [{ url: 'https://mock-createmock.test' }],
+    }
+    const mock = await createMock(specWithServer)
+    await mock.intercept()
+
+    const response = await fetch('https://mock-createmock.test/pets/1')
+    expect(response.status).toBe(200)
+
+    await mock.close()
+  })
+})

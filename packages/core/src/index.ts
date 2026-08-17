@@ -3,6 +3,11 @@ import { Engine, type EngineOptions, type EngineRequest, type EngineResponse } f
 import type { OverrideHandler } from './overrides'
 import type { HttpMethod } from './route-table'
 import { createServerAdapter, type ServerHandle } from './server-adapter'
+import {
+  createInterceptionAdapter,
+  type InterceptionHandle,
+  type InterceptionOptions,
+} from './interception-adapter'
 
 export type CreateMockOptions = EngineOptions
 
@@ -12,6 +17,7 @@ export interface MockInstance {
   reset(): void
   handle(request: EngineRequest): Promise<EngineResponse>
   listen(port?: number): Promise<{ port: number }>
+  intercept(options?: InterceptionOptions): Promise<void>
   close(): Promise<void>
 }
 
@@ -22,6 +28,7 @@ export async function createMock(
   const loaded = await loadSpec(spec)
   const engine = new Engine(loaded, options)
   let server: ServerHandle | undefined
+  let interception: InterceptionHandle | undefined
 
   return {
     seed: (pathTemplate, data) => engine.seed(pathTemplate, data),
@@ -33,9 +40,14 @@ export async function createMock(
       server = createServerAdapter(engine)
       return server.listen(port)
     },
+    async intercept(interceptOptions) {
+      interception = await createInterceptionAdapter(engine, loaded, interceptOptions)
+    },
     async close() {
       await server?.close()
+      await interception?.close()
       server = undefined
+      interception = undefined
     },
   }
 }
