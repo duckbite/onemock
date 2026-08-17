@@ -1,0 +1,108 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Payments API", "version": "1.0.0" },
+  "paths": {
+    "/payments": {
+      "get": {
+        "operationId": "listPayments",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of payments",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Payment" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPayment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NewPayment" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Payment" } }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{paymentId}": {
+      "parameters": [
+        { "name": "paymentId", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "operationId": "getPayment",
+        "responses": {
+          "200": {
+            "description": "A payment",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Payment" } }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePayment",
+        "responses": {
+          "204": { "description": "Deleted" }
+        }
+      }
+    },
+    "/account": {
+      "get": {
+        "operationId": "getAccount",
+        "responses": {
+          "200": {
+            "description": "Account summary",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Account" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NewPayment": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "totalAmount": { "type": "number" },
+          "currency": { "type": "string" },
+          "paymentCount": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

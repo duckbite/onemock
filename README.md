@@ -2,12 +2,14 @@
 
 Intelligent, stateful mock APIs generated from an OpenAPI spec — for your tests.
 
-> **🚧 Status: early development.** This repo is being rebuilt from scratch as a
-> lightweight npm library. The core package currently exports a `createMock()`
-> stub that throws `not implemented yet` — none of the usage below is
-> functional yet. It documents the approved target design so contributors and
-> early adopters know where this is headed. Follow progress in the design spec
-> and the [Linear project](https://linear.app/duckbite/project/onemock-cf0ed953ffa0).
+> **🚧 Status: early development.** The core engine and both adapters
+> (`.listen()` for a local server, `.intercept()` for network interception)
+> are implemented and tested — `createMock()` works end to end. The CLI
+> (`onemock serve`) and the `@onemock/<service>` preset packages are not
+> built yet, and this package is not published to npm. See
+> [`example/`](example/) for a working demo, the design spec, and the
+> [Linear project](https://linear.app/duckbite/project/onemock-cf0ed953ffa0)
+> for progress.
 
 ## What is OneMock?
 
@@ -34,7 +36,7 @@ to write.
 Full product and architecture design:
 [`docs/superpowers/specs/2026-08-16-onemock-pivot-design.md`](docs/superpowers/specs/2026-08-16-onemock-pivot-design.md)
 
-## Target usage (not yet implemented)
+## Usage
 
 ```ts
 import { createMock } from 'onemock'
@@ -47,14 +49,13 @@ afterEach(() => stripe.reset())
 afterAll(() => stripe.close())
 ```
 
-Or run a standalone mock server for e2e tests via the CLI:
+This works today, except `@onemock/stripe` and the other preset packages
+don't exist yet — bring your own spec in the meantime. See
+[`example/`](example/) for a full working demo (a mocked Payments API with
+CRUD, `.listen()`, and the override API).
 
-```bash
-onemock serve stripe --port 4010
-```
-
-See the design spec's "Data Flow", "CLI", and "Preset Package Shape" sections
-for the full target API.
+A CLI (`onemock serve <spec> --port 4010`) for running a standalone mock
+server is planned but not implemented yet.
 
 ## Repository layout
 
@@ -64,6 +65,7 @@ pnpm workspace:
 packages/
   core/       → published as `onemock` — engine, adapters, CLI
   presets/    → thin @onemock/<service> spec packages (not started yet)
+example/      → a working demo: a mocked Payments API using onemock
 ```
 
 ## Development
