@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Engine } from './engine'
 import { loadSpec, type LoadedSpec } from './spec-loader'
 
@@ -151,13 +151,25 @@ describe('Engine', () => {
   })
 
   it('applies configured latency and can simulate a forced failure', async () => {
-    const engine = new Engine(await loadPetStore(), { latency: { delayMs: 5, failureRate: 1 } })
+    const spec = await loadPetStore()
+    vi.useFakeTimers()
+    try {
+      const engine = new Engine(spec, { latency: { delayMs: 5, failureRate: 1 } })
+      let settled = false
+      const pending = engine.handle({ method: 'get', path: '/pets' }).then((response) => {
+        settled = true
+        return response
+      })
 
-    const start = Date.now()
-    const response = await engine.handle({ method: 'get', path: '/pets' })
+      await vi.advanceTimersByTimeAsync(4)
+      expect(settled).toBe(false)
 
-    expect(Date.now() - start).toBeGreaterThanOrEqual(5)
-    expect(response.status).toBe(503)
+      await vi.advanceTimersByTimeAsync(1)
+      const response = await pending
+      expect(response.status).toBe(503)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('dispatches to a handler keyed by operationId instead of default CRUD', async () => {

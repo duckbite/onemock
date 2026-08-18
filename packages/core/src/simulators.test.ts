@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RateLimiter, applyLatency } from './simulators'
 
 describe('RateLimiter', () => {
@@ -47,10 +47,23 @@ describe('RateLimiter', () => {
 
 describe('applyLatency', () => {
   it('waits at least delayMs before resolving', async () => {
-    const start = Date.now()
-    await applyLatency({ delayMs: 20 })
+    vi.useFakeTimers()
+    try {
+      let settled = false
+      const pending = applyLatency({ delayMs: 20 }).then((result) => {
+        settled = true
+        return result
+      })
 
-    expect(Date.now() - start).toBeGreaterThanOrEqual(20)
+      await vi.advanceTimersByTimeAsync(19)
+      expect(settled).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(1)
+      await pending
+      expect(settled).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('never fails when failureRate is 0', async () => {
