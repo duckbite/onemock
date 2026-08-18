@@ -1,16 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createMock, type MockInstance } from 'onemock'
 import paymentsApiSpec from '../payments-api.json'
-
-interface Payment {
-  id: string
-  amount: number
-  currency?: string
-  description?: string
-}
+import { createPayment, deletePayment, getAccountBalance, getPayment, listPayments } from './payments'
 
 let mock: MockInstance
-let port: number
 let totalAmount: number
 let paymentCount: number
 let paymentAmounts: Map<string, number>
@@ -22,13 +15,8 @@ function syncAccount(): void {
   })
 }
 
-async function createPayment(amount: number): Promise<Payment> {
-  const res = await fetch(`http://localhost:${port}/payments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, currency: 'USD' }),
-  })
-  const payment = (await res.json()) as Payment
+async function recordPayment(amount: number) {
+  const payment = await createPayment({ amount, currency: 'USD' })
   paymentAmounts.set(payment.id, amount)
   totalAmount += amount
   paymentCount += 1
@@ -36,8 +24,8 @@ async function createPayment(amount: number): Promise<Payment> {
   return payment
 }
 
-async function deletePayment(id: string): Promise<void> {
-  await fetch(`http://localhost:${port}/payments/${id}`, { method: 'DELETE' })
+async function removePayment(id: string) {
+  await deletePayment(id)
   totalAmount -= paymentAmounts.get(id) ?? 0
   paymentCount -= 1
   paymentAmounts.delete(id)
@@ -46,8 +34,7 @@ async function deletePayment(id: string): Promise<void> {
 
 beforeEach(async () => {
   mock = await createMock(paymentsApiSpec)
-  const listen = await mock.listen(0)
-  port = listen.port
+  await mock.intercept()
   totalAmount = 0
   paymentCount = 0
   paymentAmounts = new Map()
@@ -58,78 +45,63 @@ afterEach(async () => {
   await mock.close()
 })
 
-describe('Payments API mock', () => {
+describe('payments client', () => {
   it('starts with a zeroed account before any payment exists', async () => {
-    const response = await fetch(`http://localhost:${port}/account`)
-    const account = await response.json()
+    const account = await getAccountBalance()
 
     expect(account).toEqual({ totalAmount: 0, currency: 'USD', paymentCount: 0 })
   })
 
-  it('increases totalAmount when a payment is created', async () => {
-    await createPayment(100)
+  it('increases the account total when a payment is created', async () => {
+    await recordPayment(100)
 
-    const account = await (await fetch(`http://localhost:${port}/account`)).json()
+    const account = await getAccountBalance()
 
     expect(account).toEqual({ totalAmount: 100, currency: 'USD', paymentCount: 1 })
   })
 
-  it('accumulates totalAmount across multiple payments', async () => {
-    await createPayment(100)
-    await createPayment(50)
+  it('accumulates the account total across multiple payments', async () => {
+    await recordPayment(100)
+    await recordPayment(50)
 
-    const account = await (await fetch(`http://localhost:${port}/account`)).json()
+    const account = await getAccountBalance()
 
     expect(account).toEqual({ totalAmount: 150, currency: 'USD', paymentCount: 2 })
   })
 
-  it('decreases totalAmount when a payment is deleted', async () => {
-    const payment = await createPayment(100)
+  it('decreases the account total when a payment is deleted', async () => {
+    const payment = await recordPayment(100)
 
-    await deletePayment(payment.id)
+    await removePayment(payment.id)
 
-    const account = await (await fetch(`http://localhost:${port}/account`)).json()
+    const account = await getAccountBalance()
     expect(account).toEqual({ totalAmount: 0, currency: 'USD', paymentCount: 0 })
   })
 
   it('lists all payments', async () => {
-    await createPayment(100)
-    await createPayment(50)
+    await recordPayment(100)
+    await recordPayment(50)
 
-    const response = await fetch(`http://localhost:${port}/payments`)
-    const body = (await response.json()) as { data: Payment[]; total: number }
+    const payments = await listPayments()
 
-    expect(body.data).toHaveLength(2)
-    expect(body.total).toBe(2)
+    expect(payments).toHaveLength(2)
   })
 
   it('gets a single payment by id', async () => {
-    const created = await createPayment(42)
+    const created = await recordPayment(42)
 
-    const response = await fetch(`http://localhost:${port}/payments/${created.id}`)
-    const fetched = await response.json()
+    const fetched = await getPayment(created.id)
 
     expect(fetched).toEqual(created)
   })
 
-  it('returns 204 with no body when deleting a payment', async () => {
-    const created = await createPayment(42)
+  it('deletes a payment without throwing', async () => {
+    const created = await recordPayment(42)
 
-    const response = await fetch(`http://localhost:${port}/payments/${created.id}`, {
-      method: 'DELETE',
-    })
-
-    expect(response.status).toBe(204)
-    expect(await response.text()).toBe('')
+    await expect(removePayment(created.id)).resolves.toBeUndefined()
   })
 
   it('rejects creating a payment with no amount', async () => {
-    const response = await fetch(`http://localhost:${port}/payments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currency: 'USD' }),
-    })
-
-    expect(response.status).toBe(400)
+    await expect(createPayment({} as never)).rejects.toThrow('Failed to create payment: 400')
   })
 })
