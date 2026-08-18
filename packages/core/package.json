@@ -2,6 +2,24 @@
   "name": "onemock",
   "version": "0.1.0",
   "description": "Spec-driven, intelligent mock APIs for tests — generate a stateful mock server or in-process interceptor from an OpenAPI spec.",
+  "license": "MIT",
+  "author": "Duckbite",
+  "homepage": "https://github.com/duckbite/onemock#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duckbite/onemock.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/duckbite/onemock/issues"
+  },
+  "keywords": [
+    "mock",
+    "openapi",
+    "testing",
+    "msw",
+    "api"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -14,8 +32,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },

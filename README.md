@@ -6,9 +6,14 @@ Intelligent, stateful mock APIs generated from an OpenAPI spec — for your test
 > (`.listen()` for a local server, `.intercept()` for network interception)
 > are implemented and tested — `createMock()` works end to end. The CLI
 > (`onemock serve`) and the `@onemock/<service>` preset packages are not
+<<<<<<< Updated upstream
 > built yet, and this package is not published to npm. See
 > [`example/`](example/) for a working demo, the design spec, and the
 > [Linear project](https://linear.app/duckbite/project/onemock-cf0ed953ffa0)
+=======
+> built yet. See [`examples/`](examples/) for working demos, the design spec,
+> and the [Linear project](https://linear.app/duckbite/project/onemock-cf0ed953ffa0)
+>>>>>>> Stashed changes
 > for progress.
 
 ## What is OneMock?
@@ -81,6 +86,37 @@ pnpm lint       # lint the whole repo
 pnpm typecheck  # typecheck all packages
 pnpm format     # check formatting (pnpm format:write to fix)
 ```
+
+## Releasing
+
+`packages/core` publishes as [`onemock`](https://www.npmjs.com/package/onemock).
+Later versions are published from GitHub Actions on a version tag (`v0.1.1`,
+…) via [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) —
+no `NPM_TOKEN` secret.
+
+**One-time setup** (the package is not on the registry yet):
+
+1. Log in to [npmjs.com](https://www.npmjs.com/) (2FA required).
+2. Publish the first version from your machine so the package exists:
+   ```bash
+   npm login
+   pnpm build
+   cd packages/core && npm publish --access public
+   ```
+3. On npm: **Package → Settings → Trusted Publisher → GitHub Actions**:
+   - Organization or user: `duckbite`
+   - Repository: `onemock`
+   - Workflow filename: `publish.yml`
+   - Allowed actions: `npm publish`
+4. After that, bump `packages/core/package.json` `version`, commit, then:
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
+   That runs `.github/workflows/publish.yml` and publishes with provenance.
+
+Do not add an `NPM_TOKEN` GitHub secret. Trusted publishing uses a short-lived
+OIDC token from the workflow itself.
 
 ## License
 
