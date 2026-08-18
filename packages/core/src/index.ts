@@ -10,6 +10,13 @@ import {
 } from './interception-adapter'
 
 export type CreateMockOptions = EngineOptions
+export type {
+  HandlerContext,
+  HandlerResponse,
+  MockService,
+  MockStore,
+  OperationHandler,
+} from './handlers'
 
 export interface MockInstance {
   seed(pathTemplate: string, data: Record<string, unknown> | Record<string, unknown>[]): void

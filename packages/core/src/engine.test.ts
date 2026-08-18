@@ -159,4 +159,85 @@ describe('Engine', () => {
     expect(Date.now() - start).toBeGreaterThanOrEqual(5)
     expect(response.status).toBe(503)
   })
+
+  it('dispatches to a handler keyed by operationId instead of default CRUD', async () => {
+    const engine = new Engine(await loadPetStore(), {
+      seed: 1,
+      handlers: {
+        listPets: () => ({ status: 200, body: { custom: true } }),
+      },
+    })
+
+    const response = await engine.handle({ method: 'get', path: '/pets' })
+
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({ custom: true })
+  })
+
+  it('gives handlers the shared store so later reads see created resources', async () => {
+    const engine = new Engine(await loadPetStore(), {
+      handlers: {
+        createPet: ({ body, store, collection }) => ({
+          status: 201,
+          body: store.create(collection, (body as Record<string, unknown>) ?? {}),
+        }),
+        listPets: ({ store, collection }) => ({
+          status: 200,
+          body: { data: store.list(collection) },
+        }),
+      },
+    })
+
+    await engine.handle({ method: 'post', path: '/pets', body: { name: 'Rex' } })
+    const listed = await engine.handle({ method: 'get', path: '/pets' })
+
+    expect(listed.body).toEqual({ data: [{ id: '1', name: 'Rex' }] })
+  })
+
+  it('falls back to default CRUD when no handler is registered for the operation', async () => {
+    const engine = new Engine(await loadPetStore(), {
+      handlers: {
+        listPets: () => ({ status: 200, body: { custom: true } }),
+      },
+    })
+
+    const created = await engine.handle({ method: 'post', path: '/pets', body: { name: 'Rex' } })
+
+    expect(created.status).toBe(201)
+    expect((created.body as { name: string }).name).toBe('Rex')
+  })
+
+  it('lets an override take precedence over a registered handler', async () => {
+    const engine = new Engine(await loadPetStore(), {
+      handlers: {
+        listPets: () => ({ status: 200, body: { fromHandler: true } }),
+      },
+    })
+    engine.override('get', '/pets', { status: 200, body: { fromOverride: true } })
+
+    const response = await engine.handle({ method: 'get', path: '/pets' })
+
+    expect(response.body).toEqual({ fromOverride: true })
+  })
+
+  it('validates the request before calling a handler', async () => {
+    let called = false
+    const engine = new Engine(await loadPetStore(), {
+      handlers: {
+        createPet: () => {
+          called = true
+          return { status: 201, body: { skipped: true } }
+        },
+      },
+    })
+
+    const response = await engine.handle({
+      method: 'post',
+      path: '/pets',
+      body: { tag: 'no-name' },
+    })
+
+    expect(response.status).toBe(400)
+    expect(called).toBe(false)
+  })
 })

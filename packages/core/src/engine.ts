@@ -7,6 +7,7 @@ import { validateRequest } from './validator'
 import { RateLimiter, applyLatency, type RateLimitConfig, type LatencyConfig } from './simulators'
 import { paginate } from './pagination'
 import { createLogger, type LogLevel } from './logger'
+import type { MockService } from './handlers'
 
 export interface EngineRequest {
   method: string
@@ -27,6 +28,7 @@ export interface EngineOptions {
   rateLimit?: RateLimitConfig
   latency?: LatencyConfig
   logLevel?: LogLevel
+  handlers?: MockService
 }
 
 export class Engine {
@@ -37,6 +39,7 @@ export class Engine {
   private readonly rateLimiter?: RateLimiter
   private readonly latencyConfig?: LatencyConfig
   private readonly logger: ReturnType<typeof createLogger>
+  private readonly handlers: MockService
 
   constructor(spec: LoadedSpec, options: EngineOptions = {}) {
     this.routeTable = buildRouteTable(spec.document)
@@ -45,6 +48,7 @@ export class Engine {
     this.rateLimiter = options.rateLimit ? new RateLimiter(options.rateLimit) : undefined
     this.latencyConfig = options.latency
     this.logger = createLogger(options.logLevel ?? 'off')
+    this.handlers = options.handlers ?? {}
   }
 
   seed(pathTemplate: string, data: Record<string, unknown> | Record<string, unknown>[]): void {
@@ -56,7 +60,12 @@ export class Engine {
     }
   }
 
-  override(method: HttpMethod, pathTemplate: string, handler: OverrideHandler, times?: number): void {
+  override(
+    method: HttpMethod,
+    pathTemplate: string,
+    handler: OverrideHandler,
+    times?: number,
+  ): void {
     this.overrides.override(method, pathTemplate, handler, { times })
   }
 
@@ -119,6 +128,26 @@ export class Engine {
         headers: {},
         body: { error: 'validation_failed', issues: validation.issues },
       })
+    }
+
+    const operationId = route.operation.operationId
+    if (typeof operationId === 'string') {
+      const handler = this.handlers[operationId]
+      if (handler !== undefined) {
+        const handlerResponse = await handler({
+          params,
+          query,
+          headers,
+          body: request.body,
+          collection: collectionKeyFor(route.path),
+          store: this.store,
+        })
+        return this.finish(method, request, {
+          status: handlerResponse.status,
+          headers: handlerResponse.headers ?? {},
+          body: handlerResponse.body,
+        })
+      }
     }
 
     const response = this.resolveFromStore(method, route, params, query, request.body)
@@ -187,9 +216,7 @@ export class Engine {
     if (method === 'delete') {
       if (id === undefined) return this.notFound(route.path)
       const deleted = this.store.delete(collection, id)
-      return deleted
-        ? { status: 204, headers: {}, body: undefined }
-        : this.notFound(route.path)
+      return deleted ? { status: 204, headers: {}, body: undefined } : this.notFound(route.path)
     }
 
     if (id !== undefined) {
@@ -236,10 +263,11 @@ function lastParamName(pathTemplate: string): string | undefined {
   return undefined
 }
 
-function responseSchemaFor(operation: Record<string, unknown>): Record<string, unknown> | undefined {
+function responseSchemaFor(
+  operation: Record<string, unknown>,
+): Record<string, unknown> | undefined {
   const responses = operation.responses as
-    | Record<string, { content?: Record<string, { schema?: Record<string, unknown> }> }>
-    | undefined
+    Record<string, { content?: Record<string, { schema?: Record<string, unknown> }> }> | undefined
   if (responses === undefined) return undefined
 
   const successKey = Object.keys(responses).find((key) => key.startsWith('2'))

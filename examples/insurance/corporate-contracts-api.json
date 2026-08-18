@@ -1,0 +1,101 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "FleetCover Corporate Contracts API", "version": "2.0.1" },
+  "servers": [{ "url": "https://contracts.fleetcover.test" }],
+  "paths": {
+    "/v2/contracts": {
+      "get": {
+        "operationId": "searchFleetContracts",
+        "parameters": [
+          {
+            "name": "registrationNumber",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching fleet contracts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["results"],
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/FleetContract" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerFleetContract",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NewFleetContract" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/FleetContract" } }
+            }
+          }
+        }
+      }
+    },
+    "/v2/contracts/{contractRef}": {
+      "get": {
+        "operationId": "getFleetContract",
+        "parameters": [
+          {
+            "name": "contractRef",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A fleet contract",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/FleetContract" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NewFleetContract": {
+        "type": "object",
+        "required": ["registrationNumber", "legalEntity", "annualPremium"],
+        "properties": {
+          "registrationNumber": { "type": "string" },
+          "legalEntity": { "type": "string" },
+          "fleetId": { "type": "string" },
+          "annualPremium": { "type": "number" }
+        }
+      },
+      "FleetContract": {
+        "type": "object",
+        "properties": {
+          "contractRef": { "type": "string" },
+          "registrationNumber": { "type": "string" },
+          "legalEntity": { "type": "string" },
+          "fleetId": { "type": "string" },
+          "annualPremium": { "type": "number" }
+        }
+      }
+    }
+  }
+}

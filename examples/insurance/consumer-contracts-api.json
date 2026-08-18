@@ -1,0 +1,101 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "CitoCover Personal Motor API", "version": "1.2.0" },
+  "servers": [{ "url": "https://api.citocover.test" }],
+  "paths": {
+    "/personal-policies": {
+      "get": {
+        "operationId": "findPersonalPolicies",
+        "parameters": [
+          {
+            "name": "licensePlate",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching personal policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["policies"],
+                  "properties": {
+                    "policies": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PersonalPolicy" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPersonalPolicy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/NewPersonalPolicy" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PersonalPolicy" } }
+            }
+          }
+        }
+      }
+    },
+    "/personal-policies/{policyId}": {
+      "get": {
+        "operationId": "getPersonalPolicy",
+        "parameters": [
+          {
+            "name": "policyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A personal policy",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PersonalPolicy" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NewPersonalPolicy": {
+        "type": "object",
+        "required": ["licensePlate", "customerName", "premiumMonthly"],
+        "properties": {
+          "licensePlate": { "type": "string" },
+          "customerName": { "type": "string" },
+          "product": { "type": "string" },
+          "premiumMonthly": { "type": "number" }
+        }
+      },
+      "PersonalPolicy": {
+        "type": "object",
+        "properties": {
+          "policyId": { "type": "string" },
+          "licensePlate": { "type": "string" },
+          "customerName": { "type": "string" },
+          "product": { "type": "string" },
+          "premiumMonthly": { "type": "number" }
+        }
+      }
+    }
+  }
+}
