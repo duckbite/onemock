@@ -1,0 +1,18 @@
+{
+  "name": "onemock-example-insurance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretest": "pnpm --filter onemock build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "onemock": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  }
+}

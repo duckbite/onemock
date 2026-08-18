@@ -1,44 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createMock, type MockInstance } from 'onemock'
 import paymentsApiSpec from '../payments-api.json'
-import { createPayment, deletePayment, getAccountBalance, getPayment, listPayments } from './payments'
+import {
+  createPayment,
+  deletePayment,
+  getAccountBalance,
+  getPayment,
+  listPayments,
+} from './payments'
+import { paymentsMock } from './mocks/payments'
 
 let mock: MockInstance
-let totalAmount: number
-let paymentCount: number
-let paymentAmounts: Map<string, number>
-
-function syncAccount(): void {
-  mock.override('get', '/account', {
-    status: 200,
-    body: { totalAmount, currency: 'USD', paymentCount },
-  })
-}
-
-async function recordPayment(amount: number) {
-  const payment = await createPayment({ amount, currency: 'USD' })
-  paymentAmounts.set(payment.id, amount)
-  totalAmount += amount
-  paymentCount += 1
-  syncAccount()
-  return payment
-}
-
-async function removePayment(id: string) {
-  await deletePayment(id)
-  totalAmount -= paymentAmounts.get(id) ?? 0
-  paymentCount -= 1
-  paymentAmounts.delete(id)
-  syncAccount()
-}
 
 beforeEach(async () => {
-  mock = await createMock(paymentsApiSpec)
+  mock = await createMock(paymentsApiSpec, { handlers: paymentsMock })
   await mock.intercept()
-  totalAmount = 0
-  paymentCount = 0
-  paymentAmounts = new Map()
-  syncAccount()
 })
 
 afterEach(async () => {
@@ -53,7 +29,7 @@ describe('payments client', () => {
   })
 
   it('increases the account total when a payment is created', async () => {
-    await recordPayment(100)
+    await createPayment({ amount: 100, currency: 'USD' })
 
     const account = await getAccountBalance()
 
@@ -61,8 +37,8 @@ describe('payments client', () => {
   })
 
   it('accumulates the account total across multiple payments', async () => {
-    await recordPayment(100)
-    await recordPayment(50)
+    await createPayment({ amount: 100, currency: 'USD' })
+    await createPayment({ amount: 50, currency: 'USD' })
 
     const account = await getAccountBalance()
 
@@ -70,17 +46,17 @@ describe('payments client', () => {
   })
 
   it('decreases the account total when a payment is deleted', async () => {
-    const payment = await recordPayment(100)
+    const payment = await createPayment({ amount: 100, currency: 'USD' })
 
-    await removePayment(payment.id)
+    await deletePayment(payment.id)
 
     const account = await getAccountBalance()
     expect(account).toEqual({ totalAmount: 0, currency: 'USD', paymentCount: 0 })
   })
 
   it('lists all payments', async () => {
-    await recordPayment(100)
-    await recordPayment(50)
+    await createPayment({ amount: 100, currency: 'USD' })
+    await createPayment({ amount: 50, currency: 'USD' })
 
     const payments = await listPayments()
 
@@ -88,7 +64,7 @@ describe('payments client', () => {
   })
 
   it('gets a single payment by id', async () => {
-    const created = await recordPayment(42)
+    const created = await createPayment({ amount: 42, currency: 'USD' })
 
     const fetched = await getPayment(created.id)
 
@@ -96,9 +72,9 @@ describe('payments client', () => {
   })
 
   it('deletes a payment without throwing', async () => {
-    const created = await recordPayment(42)
+    const created = await createPayment({ amount: 42, currency: 'USD' })
 
-    await expect(removePayment(created.id)).resolves.toBeUndefined()
+    await expect(deletePayment(created.id)).resolves.toBeUndefined()
   })
 
   it('rejects creating a payment with no amount', async () => {

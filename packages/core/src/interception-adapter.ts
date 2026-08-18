@@ -1,4 +1,5 @@
-import type { JsonBodyType } from 'msw'
+import type { JsonBodyType, RequestHandler } from 'msw'
+import type { SetupServer } from 'msw/node'
 import type { Engine } from './engine'
 import type { LoadedSpec } from './spec-loader'
 
@@ -10,6 +11,8 @@ export interface InterceptionOptions {
 export interface InterceptionHandle {
   close(): Promise<void>
 }
+
+let shared: { server: SetupServer; refCount: number } | undefined
 
 export function getBaseUrls(document: Record<string, unknown>): string[] {
   const servers = document.servers as { url: string }[] | undefined
@@ -79,13 +82,27 @@ export async function createInterceptionAdapter(
     })
   }
 
-  const handlers = baseUrls.map((baseUrl) => http.all(`${baseUrl}/*`, resolve))
-  const server = setupServer(...handlers)
-  server.listen({ onUnhandledRequest: options.passthrough ? 'bypass' : 'error' })
+  const handlers: RequestHandler[] = baseUrls.map((baseUrl) => http.all(`${baseUrl}/*`, resolve))
 
+  if (shared === undefined) {
+    const server = setupServer(...handlers)
+    server.listen({ onUnhandledRequest: options.passthrough ? 'bypass' : 'error' })
+    shared = { server, refCount: 1 }
+  } else {
+    shared.server.use(...handlers)
+    shared.refCount += 1
+  }
+
+  let closed = false
   return {
     async close() {
-      server.close()
+      if (closed || shared === undefined) return
+      closed = true
+      shared.refCount -= 1
+      if (shared.refCount <= 0) {
+        shared.server.close()
+        shared = undefined
+      }
     },
   }
 }
